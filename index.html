@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>타워</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+#wp{width:100vmin;max-width:420px;aspect-ratio:9/16;position:relative;background:#f5f5f0;overflow:hidden;}
+#cvT{width:100%;height:100%;display:block;}
+#vl{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.78);padding:3px 13px;border-radius:18px;font-size:12px;color:#444;pointer-events:none;font-family:'Nanum Myeongjo',serif;white-space:nowrap;}
+#ct{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;}
+.cb{width:46px;height:46px;border:1px solid #ccc;background:rgba(255,255,255,0.88);border-radius:50%;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
+#vn{font-size:11px;color:#888;min-width:34px;text-align:center;}
+#re{padding:7px 15px;border:1px solid #ccc;background:rgba(255,255,255,0.88);border-radius:16px;cursor:pointer;font-size:11px;color:#555;font-family:'Nanum Myeongjo',serif;touch-action:manipulation;}
+</style>
+</head>
+<body>
+<div id="wp">
+<canvas id="cvT"></canvas>
+<div id="vl">탑뷰</div>
+<div id="ct">
+  <button class="cb" id="vp">&#8249;</button>
+  <span id="vn">1/10</span>
+  <button class="cb" id="vnx">&#8250;</button>
+  <button id="re">&#8635; 다시</button>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+var SC=[
+  {s:'Y',t:'내가 가져올게. 토스트 와플',i:1},{s:'Y',t:'일찍 나오지. 수영도 같이 하고',i:1},
+  {s:'P',t:'나 택시 타고 왔어.',i:1},{s:'Y',t:'응 지하에 있지',i:1},
+  {s:'P',t:'스키장 출발할 거야',i:1},{s:'Y',t:'식구 누가 같이 가야 하는 거 아니야?',i:2},
+  {s:'P',t:'현진이 엄마 교사야. 케어 확실해.',i:1},{s:'Y',t:'그럼 먹고 우리도 가자.',i:2},
+  {s:'Y',t:'서프라이즈 나 오늘 진료도 없어.',i:2},{s:'P',t:'우린 법원 가야지.',i:3},
+  {s:'Y',t:'누굴 위한 이혼이야',i:3},{s:'Y',t:'이혼하면 행복할 것 같아?',i:3},
+  {s:'P',t:'이대로 살면 행복하고?',i:3},{s:'Y',t:'최선을 다할게.',i:2},
+  {s:'P',t:'걔한테도 최선을 다했으니까',i:2},{s:'P',t:'사랑하는 사이라고 자신 있게 말하지.',i:3},
+  {s:'Y',t:'3년만 시간을 줘.',i:3},{s:'Y',t:'마음 정했어.',i:3},
+  {s:'P',t:'알 게 뭐야?',i:4},{s:'Y',t:'하늘에 맹세',i:2},
+  {s:'P',t:'정나미 떨어져 본 적 있어?',i:3},{s:'Y',t:'살면서 죗값 치를게.',i:2},
+  {s:'Y',t:'난 미워도 지아 생각해서',i:2},{s:'P',t:'생각하고 또 생각했어.',i:3},
+  {s:'Y',t:'부탁이야',i:3},{s:'P',t:'안 봐야 잊고 살아.',i:3},
+  {s:'P',t:'견디고.',i:2},{s:'Y',t:'그냥 살자.',i:2},
+  {s:'Y',t:'지아는 그늘 없이 커야지.',i:2},{s:'P',t:'아무 일 없는 것처럼 나 못해.',i:3},
+  {s:'P',t:'더 이상 웃음도 안 나오고',i:3},{s:'P',t:'신유신 혼자 원맨쇼 할 거야.',i:3},
+  {s:'Y',t:'할게',i:4},{s:'P',t:'그 얼굴 보고 싶지가 않다고',i:4},
+  {s:'P',t:'더 이상 목소리도 듣고 싶지 않고',i:4},{s:'P',t:'모든 게 거짓이었다니까?',i:5},
+  {s:'P',t:'법원 가',i:5},{s:'P',t:'도덕군자네',i:4},
+  {s:'P',t:'16살이나 어린 애 꼬셔서 바람 피우고',i:4},{s:'Y',t:'DNA가 달라.',i:3},
+  {s:'Y',t:'용서해줘. 죽을 죄 지었어.',i:4},{s:'P',t:'무릎만 아파.',i:4},
+  {s:'P',t:'보는 사람 피곤하기만 해.',i:3},{s:'Y',t:'난 당신 없이 못 살아.',i:4},
+  {s:'P',t:'사라져',i:5},{s:'P',t:'일어나. 일어나.',i:4},
+  {s:'P',t:'그러고 있는 것도 보기 싫어.',i:4},{s:'P',t:'진정성 없는 가식이면 상대도 느껴져.',i:3},
+  {s:'P',t:'진심 느껴져.',i:4},{s:'P',t:'걔 아미한테도 진심이었겠지.',i:3},
+  {s:'P',t:'아니었다고 사랑이었으면 나 배신 안 했어.',i:4},{s:'P',t:'치정 살인이라는 말이 왜 있는데',i:4},
+  {s:'Y',t:'죽어도 이혼 안 해.',i:5},{s:'P',t:'결정할 자격 없다니까!',i:5},
+  {s:'P',t:'결정은 내가 하는 거야.',i:5},{s:'P',t:'바람 피우는 게 부모로서의 책임인가 보지?',i:4},
+  {s:'P',t:'더는 호적상 신유신 와이프로 살고 싶지 않은데?',i:4},
+  {s:'Y',t:'나한텐 사평 뿐이야.',i:4},{s:'P',t:'형식적으로 살기만 하면 뭐해?',i:3},
+  {s:'P',t:'사랑 없이 존중 없이 사는 건 결혼에 대한 예의가 아니야.',i:3},
+  {s:'P',t:'전 재산 내 몫으로 안다고',i:4},{s:'P',t:'상처와 배신감 치유되고 없어져',i:4},
+  {s:'P',t:'쇼지 진짜 죄책감은 없지',i:5},{s:'Y',t:'겪어봐.',i:3},
+  {s:'Y',t:'이 옷만은 안 돼.',i:5},{s:'P',t:'말 쉽네.',i:4},
+  {s:'P',t:'인생은 대신 살아줄 수 없는 거야.',i:3},{s:'P',t:'난 뱉은 말 지켜',i:4},
+  {s:'P',t:'데리고 살라고 했어. 아미한테',i:4},{s:'Y',t:'인생 마침표 찍을 거야.',i:4},
+  {s:'P',t:'어떤 말도 이젠 가식으로 들려.',i:5},{s:'P',t:'상간녀가 사랑하는 사이라고 했는데',i:4},
+  {s:'P',t:'끝까지 어떻게든 속이려고',i:4},{s:'P',t:'남남 만났어 등 돌리면 남보다 못해.',i:4},
+  {s:'P',t:'좀 참지.',i:5},{s:'P',t:'빠졌어.',i:5},
+  {s:'P',t:'얼마나 애틋했을까?',i:5},{s:'P',t:'아주 완벽',i:5},
+  {s:'P',t:'누구는 배신당하고 가슴이 찢어져도 참고 용서하고',i:5},
+  {s:'P',t:'말로는 못 당하니까',i:5},{s:'P',t:'나는 미련 없어. 조금도',i:5},
+  {s:'P',t:'그 다음이 나잖아.',i:5},{s:'P',t:'처음부터 남다른 감정이 있었으니까',i:5},
+  {s:'P',t:'솔직하게 말 안 한 거야.',i:5},{s:'P',t:'내가 알던 사람 아니야',i:5},
+  {s:'P',t:'그때 끊었어야 했는데',i:5},{s:'P',t:'말할 수록!!',i:6},
+  {s:'P',t:'깨지게 만들었어.',i:5},{s:'P',t:'백 번 천 번을 마음 돌릴래도 불가능해.',i:5},
+  {s:'P',t:'어떻게 잊어',i:6},{s:'S',t:'많이 신경 쓰지. 좋은 사람 돼 준다고',i:3},
+  {s:'S',t:'오늘 더해. 결국에',i:3},{s:'S',t:'오랜 시간 지나보면 추억이 돼 있겠지.',i:3},
+  {s:'P',t:'엄마한테 작별 인사도 못했어.',i:5},{s:'P',t:'그렇게 엄마 떠나 보냈어.',i:5},
+  {s:'Y',t:'낮이든 밤이든 달려갈게',i:3},{s:'P',t:'미워 죽겠어. 정말',i:6},
+  {s:'P',t:'우리 얼마나 잘 살 수 있었는데',i:5},{s:'P',t:'둘 다 노력한 거 헛수고 됐어.',i:5},
+  {s:'Y',t:'내가 사랑하는 여자는 사표일 뿐이야. 영원히',i:4},
+  {s:'S',t:'내 간절한 기도',i:4},{s:'S',t:'스치는 바람에도',i:3},
+  {s:'P',t:'씨 같은 시대에',i:5},{s:'P',t:'이번이 정말 처음',i:5},
+  {s:'P',t:'다 거기서 거기라는 얘기 아니야.',i:5},{s:'Y',t:'미안해.',i:5},
+  {s:'P',t:'엄마 내가 병들게 했어.',i:5},{s:'P',t:'나 땜에',i:6},
+  {s:'P',t:'미안해 미안해.',i:6},{s:'P',t:'기만이 와',i:6},
+  {s:'P',t:'무슨 생각이 듭니까?',i:5},{s:'P',t:'내가 같이 살 수 있는 사람이 아니야.',i:5},
+  {s:'P',t:'도저히 부류가 달라.',i:5},{s:'P',t:'니 얘긴 다 끝났어.',i:6},
+  {s:'P',t:'더 할 얘기도 들을 얘기도 없어.',i:6},
+  {s:'P',t:'달라!! 천연덕스럽게 엄마 속이시지 않았어.',i:5},
+  {s:'P',t:'본심 나와',i:6},{s:'P',t:'우리 신뢰는 깨졌어.',i:6},
+  {s:'P',t:'신뢰의 믿음은 금가고 깨졌어.',i:6},
+  {s:'P',t:'일어나 보니까 산산조각 박살 나 있는 거야.',i:6},
+  {s:'P',t:'왜 완벽하지 못하고 나약해 빠졌을까?',i:5},
+  {s:'P',t:'완벽한 상대를 만났어야 했어.',i:5},
+  {s:'P',t:'있을 수 없는 일이야.',i:6},{s:'P',t:'기가 차더라.',i:6},
+  {s:'P',t:'마음에 들지 말았어야지.',i:6},
+  {s:'P',t:'양다리 삼다리 걸치는 게 양아치 아니고 뭐야',i:5},
+  {s:'Y',t:'나한테 사피영 아니면 안 된다.',i:5},
+  {s:'P',t:'우리 인연은 여기까지야 끝났어.',i:6},
+  {s:'P',t:'혀 뽑아서 탕탕배치처럼 다지고 싶어',i:6},
+  {s:'P',t:'마지막 들을 말 다 들었어.',i:6},
+  {s:'Y',t:'우리가 이별하는 방법은 죽음 뿐이야.',i:5},
+  {s:'P',t:'왜 못 참았냐고.',i:6},{s:'P',t:'변해.',i:6},
+  {s:'P',t:'당신 불륜 한 방에 다 날아갔어.',i:6},
+  {s:'P',t:'안타깝고 허무하고 가슴 찢어져',i:5},
+  {s:'P',t:'기만이 와',i:6},{s:'S',t:'내 간절한 기도',i:5},
+  {s:'P',t:'살아서 건강할 때 했어야 하는 말',i:5},
+  {s:'P',t:'미안해 미안해.',i:6}
+];
+
+function init(){
+  var wp=document.getElementById('wp');
+  var cv=document.getElementById('cvT');
+  var W=wp.clientWidth, H=wp.clientHeight;
+  var rdr=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  rdr.setSize(W,H);
+  rdr.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  rdr.shadowMap.enabled=true;
+  rdr.setClearColor(0xf5f5f0);
+  var sc=new THREE.Scene();
+  var cam=new THREE.PerspectiveCamera(55,W/H,0.1,200);
+
+  var aLight=new THREE.AmbientLight(0xffffff,0.6);
+  sc.add(aLight);
+  var sun=new THREE.DirectionalLight(0xffffff,0.85);
+  sun.position.set(6,12,8);
+  sun.castShadow=true;
+  sun.shadow.mapSize.set(1024,1024);
+  sc.add(sun);
+  var bl=new THREE.DirectionalLight(0xc8d8ff,0.3);
+  bl.position.set(-5,4,-5);
+  sc.add(bl);
+
+  var rt=new THREE.Group();
+  sc.add(rt);
+
+  var VIEWS=[
+    {p:[0,22,0.1],    t:[0,3.5,0],  lb:'탑뷰'},
+    {p:[14,4,0],      t:[0,3,0],    lb:'측면'},
+    {p:[0,0.8,9],     t:[0,0.8,0],  lb:'1층 클로즈업'},
+    {p:[0,1.8,9],     t:[0,1.8,0],  lb:'2층 클로즈업'},
+    {p:[0,2.8,9],     t:[0,2.8,0],  lb:'3층 클로즈업'},
+    {p:[0,3.8,9],     t:[0,3.8,0],  lb:'4층 클로즈업'},
+    {p:[0,4.8,9],     t:[0,4.8,0],  lb:'5층 클로즈업'},
+    {p:[0,6.2,9],     t:[0,6.2,0],  lb:'6층 클로즈업'},
+    {p:[0.5,0.12,1.8],t:[0,8,0],    lb:'바텀뷰'},
+    {p:[0,22,0.1],    t:[0,3.5,0],  lb:'탑뷰 루프'}
+  ];
+  var vi=0;
+  var curP=new THREE.Vector3(0,22,0.1);
+  var curT=new THREE.Vector3(0,3.5,0);
+  var aimP=new THREE.Vector3(0,22,0.1);
+  var aimT=new THREE.Vector3(0,3.5,0);
+  cam.position.copy(curP);
+  cam.lookAt(curT);
+
+  function setView(i){
+    vi=(i+VIEWS.length)%VIEWS.length;
+    var v=VIEWS[vi];
+    aimP.set(v.p[0],v.p[1],v.p[2]);
+    aimT.set(v.t[0],v.t[1],v.t[2]);
+    document.getElementById('vl').textContent=v.lb;
+    document.getElementById('vn').textContent=(vi+1)+'/'+VIEWS.length;
+  }
+  document.getElementById('vp').onclick=function(){setView(vi-1);};
+  document.getElementById('vnx').onclick=function(){setView(vi+1);};
+
+  var Q=[], TQ=[];
+  var DROP=2.8, DUR=320, STEP=85;
+  var t0=Date.now();
+
+  function eob(x){var c1=1.70158,c3=c1+1;return x>=1?1:1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);}
+
+  function ms(c){return new THREE.MeshStandardMaterial({color:c,metalness:0,roughness:0.82});}
+
+  // 위치를 Q에 저장하고, 시작 Y를 별도 기록
+  function reg(obj,baseY){
+    obj.visible=false;
+    // position.set 으로만 조작
+    obj.position.set(obj.position.x, baseY+DROP, obj.position.z);
+    Q.push({obj:obj, oy:baseY, sy:baseY+DROP});
+  }
+
+  function mkBox(w,h,d,col,x,y,z){
+    var geo=new THREE.BoxGeometry(w,h,d);
+    var mat=ms(col);
+    var m=new THREE.Mesh(geo,mat);
+    m.position.set(x,y,z);
+    m.castShadow=true; m.receiveShadow=true;
+    rt.add(m);
+    reg(m,y);
+    return m;
+  }
+  function hp(w,d,c,x,y,z){return mkBox(w,0.065,d,c,x,y,z);}
+  function vx(h,d,c,x,y,z){return mkBox(0.065,h,d,c,x,y,z);}
+  function vz(w,h,c,x,y,z){return mkBox(w,h,0.065,c,x,y,z);}
+  function bk(w,h,d,c,x,y,z){return mkBox(w,h,d,c,x,y,z);}
+
+  function rod(ax,ay,az,bx,by,bz,r,c,par){
+    if(!par) par=rt;
+    var dx=bx-ax,dy=by-ay,dz=bz-az;
+    var l=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    if(l<0.01) return;
+    var geo=new THREE.CylinderGeometry(r,r,l,6);
+    var m=new THREE.Mesh(geo,ms(c));
+    m.position.set((ax+bx)/2,(ay+by)/2,(az+bz)/2);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(dx,dy,dz).normalize());
+    par.add(m);
+  }
+
+  function burst(n,mn,mx,cols,br,par){
+    var phi=Math.PI*(3-Math.sqrt(5));
+    for(var i=0;i<n;i++){
+      var t=i/n, ic=Math.acos(1-2*t), az=phi*i;
+      var dx=Math.sin(ic)*Math.cos(az), dy=Math.cos(ic), dz=Math.sin(ic)*Math.sin(az);
+      var ll=mn+(mx-mn)*((i*7.3%n)/n);
+      rod(0,0,0,dx*ll,dy*ll,dz*ll,br*(0.6+0.8*(i*3.7%1)),cols[i%cols.length],par);
+    }
+  }
+
+  function mdisc(r,c,x,y,z,rx,ry,rz,bn,bmn,bmx,bcols){
+    var g=new THREE.Group();
+    g.position.set(x,y,z);
+    var d=new THREE.Mesh(new THREE.CylinderGeometry(r,r,0.065,64),ms(c));
+    d.rotation.set(rx,ry,rz);
+    g.add(d);
+    if(bn>0) burst(bn,bmn,bmx,bcols,0.018,g);
+    rt.add(g);
+    reg(g,y);
+  }
+
+  var B=0x1B5EC7,Y=0xE8D000,G=0x2A6828,P=0xC83860,K=0x111111;
+  var LG=0x3A8C3A,B2=0x7898D0,TL=0x1E7060,SL=0xD08880,PV=0x7884C8;
+
+  hp(1.5,1.3,G,0,0.032,0); vx(5.2,0.09,P,-0.56,2.6,0.16); vx(4.0,0.055,K,0.07,2.0,0); vx(4.0,0.055,K,0.17,2.0,0.11);
+  hp(1.6,1.1,SL,0,0.82,0); vz(0.85,0.75,Y,0.0,0.445,0.5); vz(0.5,0.75,G,-0.3,0.445,-0.5); vx(0.75,0.9,B,0.5,0.445,0.0); vx(0.6,0.55,P,-0.5,0.38,0.15); hp(0.7,0.4,B,0.9,0.55,0.0); hp(0.5,0.35,Y,-0.9,0.4,0.0);
+  hp(1.5,1.0,Y,0,1.42,0); vz(0.7,0.58,B,0.1,1.12,0.5); vz(0.55,0.58,G,-0.25,1.12,-0.5); vx(0.58,0.58,Y,0.5,1.12,0.1); vx(0.5,0.58,SL,-0.5,1.12,-0.1); vz(0.4,0.45,PV,0.2,1.12,-0.5);
+  hp(1.4,1.05,LG,-0.04,2.28,0.04); vz(0.8,0.84,G,0.05,1.85,-0.06); vz(0.6,0.84,B,-0.2,1.85,0.5); vx(0.82,0.84,Y,0.5,1.85,0.1); vx(0.65,0.6,PV,-0.5,1.75,0.2); hp(0.75,0.55,B,-0.9,2.0,0.06); hp(0.8,0.52,LG,0.88,2.6,0.08);
+
+  var cubeRT=new THREE.WebGLCubeRenderTarget(128,{format:THREE.RGBFormat,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter});
+  var cubeCam=new THREE.CubeCamera(0.05,20,cubeRT);
+  var tg2=new THREE.Group();
+  tg2.add(cubeCam);
+  var sg=new THREE.CylinderGeometry(0.44,0.44,1.0,64,1,true);
+  tg2.add(new THREE.Mesh(sg,new THREE.MeshStandardMaterial({color:0x2D6B2D,metalness:0.04,roughness:0.75})));
+  tg2.add(new THREE.Mesh(sg,new THREE.MeshStandardMaterial({color:0xffffff,metalness:1.0,roughness:0.0,envMap:cubeRT.texture,side:THREE.BackSide})));
+  var rm2=new THREE.MeshStandardMaterial({color:0xC0CCCE,metalness:0.93,roughness:0.06,side:THREE.DoubleSide});
+  var tt=new THREE.Mesh(new THREE.RingGeometry(0.36,0.44,64),rm2);
+  tt.rotation.x=-Math.PI/2; tt.position.set(0,0.5,0); tg2.add(tt);
+  var bb2=new THREE.Mesh(new THREE.RingGeometry(0.36,0.44,64),rm2);
+  bb2.rotation.x=Math.PI/2; bb2.position.set(0,-0.5,0); tg2.add(bb2);
+  tg2.position.set(-0.15,2.1,0.3);
+  tg2.rotation.set(1.37,0,0.3);
+  rt.add(tg2);
+  reg(tg2,2.1);
+
+  hp(1.48,1.1,G,0.04,2.84,0); vz(0.78,0.54,B,0.08,2.56,-0.06); vz(0.62,0.54,PV,0.3,2.56,-0.4); vx(0.65,0.54,Y,0.5,2.56,0.1); vx(0.55,0.54,SL,-0.5,2.56,0.1); vz(0.9,0.6,B,0.0,3.06,0.56); vx(0.66,0.44,G,-0.88,2.36,0.1); vx(0.55,0.7,Y,0.88,1.8,0.05); vx(0.58,0.6,P,0.9,1.22,-0.1);
+  hp(1.32,0.98,Y,-0.04,3.65,0.04); vz(0.8,0.79,B,0.08,3.24,-0.07); vz(0.7,0.79,G,-0.3,3.24,0.5); vx(0.82,0.79,Y,0.5,3.24,0.05); vx(0.7,0.79,PV,0.3,3.24,-0.45); bk(0.55,0.48,0.35,SL,0.2,3.04,0.1); hp(0.88,0.62,P,-0.9,4.2,0.05);
+  hp(1.22,1.0,P,0,3.92,0); vz(0.6,0.22,Y,0.1,3.785,-0.1); vx(0.5,0.22,G,-0.4,3.785,0.1);
+  hp(1.42,1.0,B,0,4.76,0.02); vz(0.7,0.82,G,-0.04,4.34,0.5); vz(0.6,0.82,SL,0.3,4.34,-0.5); vx(0.72,0.82,Y,0.5,4.34,-0.2); vx(0.58,0.82,B,-0.5,4.34,0.2);
+  var cyl1=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,0.065,32),ms(TL));
+  cyl1.position.set(0.52,4.0,-0.36); rt.add(cyl1); reg(cyl1,4.0);
+  hp(1.08,0.88,Y,-0.02,5.44,0); vz(0.65,0.66,B,0.0,5.1,0.5); vz(0.55,0.66,SL,0.3,5.1,-0.5); vx(0.65,0.66,Y,0.5,5.1,-0.2); vx(0.55,0.66,PV,-0.5,5.1,0.2); vz(1.0,0.5,PV,1.08,5.44,0.0); hp(0.82,0.55,Y,0.9,5.12,0.05); vz(0.7,0.42,G,-0.9,5.22,0.08); vx(0.65,0.46,P,0.9,4.62,0.0);
+  vz(0.7,0.98,B,0.0,5.9,0.5); vz(0.6,0.98,G,-0.28,5.9,-0.5); vx(0.72,0.98,Y,0.5,5.9,-0.06); vx(0.58,0.9,SL,0.3,5.86,-0.18); hp(0.88,0.65,LG,0.0,5.97,0.02); hp(0.7,0.55,SL,0.0,6.14,0.02); vz(0.6,0.42,Y,0.8,5.88,0.05); vx(0.5,0.32,G,-0.78,5.78,-0.05); vz(0.88,0.36,G,0.0,6.26,0.3); vx(0.5,0.42,B2,0.0,6.18,-0.35);
+  mdisc(0.56,B,1.55,7.38,-0.38,0.15,-0.2,0.1,42,1.2,4.0,[Y,G,B,P,LG,SL,PV,B2,0xE03030,0x30A030,0x4488FF,0xFFAA00]);
+  mdisc(0.36,PV,-1.38,6.98,0.2,0.1,0.15,-0.08,20,0.8,2.8,[Y,G,P,LG,SL,B]);
+  mdisc(0.23,LG,-0.58,6.98,0.4,0.05,0,0.1,10,0.6,2.0,[Y,G,B,SL,PV]);
+  mdisc(0.19,TL,0.58,7.18,0.48,-0.1,0.2,0,0,0,0,[]);
+
+  var COL={Y:'#1B5EC7',P:'#C83860',S:'#B8960A'};
+  var N=SC.length;
+  var rng=31;
+  function rand(){rng=(rng*1664525+1013904223)&0xffffffff;return(rng>>>0)/4294967296;}
+  var geomTotal=Q.length*STEP;
+
+  for(var idx=0;idx<SC.length;idx++){
+    var cfg=SC[idx];
+    var baseY=0.08+(idx/N)*7.1;
+    var yo=baseY+(rand()-0.5)*0.42;
+    var x=(rand()-0.5)*3.8;
+    var z=(rand()-0.5)*2.2;
+    var rot=(rand()-0.5)*24;
+    var fs=10+Math.round((cfg.i-1)*2);
+    var col=COL[cfg.s];
+    var div=document.createElement('div');
+    div.style.position='absolute';
+    div.style.pointerEvents='none';
+    div.style.fontFamily="'Nanum Myeongjo',serif";
+    div.style.fontSize=fs+'px';
+    div.style.color=col;
+    div.style.fontWeight='800';
+    div.style.whiteSpace='nowrap';
+    div.style.opacity='0';
+    div.style.transition='opacity 0.35s';
+    div.style.letterSpacing='-0.5px';
+    div.style.transformOrigin='left top';
+    div.textContent=cfg.t;
+    wp.appendChild(div);
+    var delayMs=180+(Math.max(0,yo)/7.2)*geomTotal*0.86+(idx*10);
+    TQ.push({div:div, wp3:new THREE.Vector3(x,Math.max(0.05,Math.min(7.6,yo)),z), rot:rot, delayMs:delayMs});
+  }
+
+  function proj(v3){
+    var v=v3.clone().project(cam);
+    if(v.z>1||v.z<-1) return null;
+    return{x:(v.x*0.5+0.5)*W, y:(-v.y*0.5+0.5)*H};
+  }
+
+  var cubeOK=false;
+  var totalMs=Q.length*STEP+DUR+200;
+
+  function animUpdate(){
+    var el=Date.now()-t0;
+    for(var i=0;i<Q.length;i++){
+      var item=Q[i];
+      var lc=(el-i*STEP)/DUR;
+      if(lc<=0){
+        item.obj.visible=false;
+        item.obj.position.set(item.obj.position.x, item.sy, item.obj.position.z);
+        continue;
+      }
+      item.obj.visible=true;
+      var p=Math.max(0,Math.min(1,eob(Math.min(1,lc))));
+      item.obj.position.set(item.obj.position.x, item.oy+DROP*(1-p), item.obj.position.z);
+    }
+    for(var j=0;j<TQ.length;j++){
+      var ti=TQ[j];
+      var lc2=(el-ti.delayMs)/380;
+      ti.div.style.opacity=lc2<=0?'0':String(Math.min(1,lc2));
+    }
+  }
+
+  function updateText(){
+    for(var i=0;i<TQ.length;i++){
+      var item=TQ[i];
+      if(parseFloat(item.div.style.opacity)<0.01){item.div.style.display='none';continue;}
+      var p=proj(item.wp3);
+      if(!p){item.div.style.display='none';continue;}
+      item.div.style.display='block';
+      item.div.style.left=p.x+'px';
+      item.div.style.top=p.y+'px';
+      item.div.style.transform='rotate('+item.rot+'deg)';
+    }
+  }
+
+  function loop(){
+    requestAnimationFrame(loop);
+    curP.lerp(aimP,0.055);
+    curT.lerp(aimT,0.055);
+    cam.position.copy(curP);
+    cam.lookAt(curT);
+    animUpdate();
+    updateText();
+    if(!cubeOK&&Date.now()-t0>totalMs){
+      tg2.visible=false;
+      cubeCam.update(rdr,sc);
+      tg2.visible=true;
+      cubeOK=true;
+    }
+    rdr.render(sc,cam);
+  }
+  loop();
+
+  document.getElementById('re').onclick=function(){
+    t0=Date.now();
+    cubeOK=false;
+    for(var i=0;i<Q.length;i++){
+      Q[i].obj.visible=false;
+      Q[i].obj.position.set(Q[i].obj.position.x, Q[i].sy, Q[i].obj.position.z);
+    }
+    for(var j=0;j<TQ.length;j++) TQ[j].div.style.opacity='0';
+  };
+
+  window.addEventListener('resize',function(){
+    W=wp.clientWidth; H=wp.clientHeight;
+    rdr.setSize(W,H);
+    cam.aspect=W/H;
+    cam.updateProjectionMatrix();
+  });
+}
+
+if(typeof THREE!=='undefined'){init();}
+else{document.querySelector('script[src*="three"]').addEventListener('load',init);}
+})();
+</script>
+</body>
+</html>
